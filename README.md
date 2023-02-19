@@ -1,247 +1,117 @@
-# v2ray-heroku
+# V2ray Edge（Beta）
 
-> ~~貌似新建的app有些需要科学访问~~，如果需要，请使用cloudflare worker CDN 或者 cloudflare tunnel 套一层。
+众所周知，V2ray 是基于 `go` 的，导致原版 V2ray 无法部署到基于 `javaScript (V8)` 的平台上。
 
-> 切换到最新的 VLESS 协议。具体客户端配置请看 config 章节。
+本项目通过，使用 `js` 实现 `VLESS`协议， 使得 **V2ray** 可以部署到一些 Edge 或者 Serverless 平台上。
 
-> v2ray-heroku 是我为了体验 github action 的产物，也是我的主力 backup，我会日常维护它。加入或者修改一些我认为好的配置。但这一般会导致客户端配置需要些许修改。 不过具体配置都会体现在 [详细 VLESS websocket 客户端配置](#vless-websocket-客户端配置)
+> For international user, I write this readme in Chinese. But I understand English pretty well, if you has any issue, please open it in Github.
 
-> 有问题请开 issue 或者 discussions。
+> 项目正在完善阶段，欢迎大家使用，如果发现 bug， 请开 issue。
+> **请定期按照 github 的提示，同步最新代码。只需要在乎下图红框的提示，其他提示不要点击**。
+> 如果你喜欢自动化，可以使用这个自动同步 fork https://github.com/apps/pull
+> ![sync](./doc/sync.jpg)
 
-> 很多人反馈 heroku 封号，我自己的还好用，请大家反馈，如果大部分人都被封号，那么就没有办法了，其他的免费的我试了 Okteto Cloud， 秒封。
+> 同步完成后，如果发现不一样，**请看文档**。
 
-## **请大家不要跑速度测试，或者长时间大流量。**
+> 本项目纯属技术性验证，探索最新的 web standard。请勿乱用，不给予任何保证。
 
+## V2ray Edge server --- Deno deploy
 
-## Change log
+Edge tunnel 的服务使用了 [Deno deploy](https://deno.com/deploy).
 
-应需求，加上首页伪装，每次部署都会随机生成首页，如果你有想法，请自己把想要的html放入到 项目html 文件，然后后续 action 部署会自动拿到。
+### 风险提示
 
-## !!!!!!! **对于一些老用户是 breaking change, 对 ws 的 path 做了修改, 请注意查看客户端配置**
+`Deno deploy` 采用 [fair use policy](https://deno.com/deploy/docs/fair-use-policy), 翻译成中文就是`看良心使用`。 违反可能会封号。
+按照我的理解，本项目应该是违反 fair use policy。请大家**酌情使用**。
 
+### 如何部署服务
 
-首先查看别人的 [youtube 教程](https://www.youtube.com/watch?v=xHZyDsFYdvA)，了解怎么配置 v2ray-heroku。**本项目使用最新 VLESS 协议，请在客户端配置选择 VLESS**。  
-[详细 VLESS websocket 客户端配置](#vless-websocket-客户端配置) 。
+请查看下面教程。
 
-如果你还想自动化你的 heroku，请查看下面的教程。
+[Deno deploy Install](./doc/edge-tunnel-deno.md)
 
-本项目是包含，
+## V2ray Edge server --- Cloudflare Worker （敬请期待）
 
-- 一键部署 V2ray 到 heroku。
-- 利用 Github action 实现 [重新部署](#重新部署)/[停止](#停止)/[启动](#启动)/[删除](#删除)。
-- 支持 heroku 的区域（us 和 eu）
-- **支持[多app和多账户](#使用-environments-实现-多账户多app-secrets-管理) [重新部署](#重新部署)/[停止](#停止)/[启动](#启动)/[删除](#删除)。**
+这个需要等 Cloudflare 发布下面的技术。
+https://blog.cloudflare.com/introducing-socket-workers/
 
-- 利用 cloudflare CDN 进行加速。
-- **利用 [cloudflare tunnel](https://www.cloudflare.com/products/tunnel/) 进行加速。**
-- **随机生成首页。每次部署都会产生随机首页。**
-    1. 如想自定义主页，请自行在仓库中生成 index.html 放入 `html` 中
+> Cloudflare 大气的免费政策，外加 优选 IP。使得 部署 V2ray 变得无比简单。
 
-```text
-项目Dockerfile是基于V2fly 官方镜像制作。仅仅增加生产配置文件的脚本。重新部署就可以更新到最新的v2ray。
-基于官方镜像，这也是v2fly 推荐的做法。
-```
+> 这个不是利用 Worker 进行反代， 而是直接部署 V2ray （js 版本）到 Worker 上。
 
-> 保持安全最简单的方式就是，保持软件更新。
+## V2ray Edge server --- Node.js
 
-## 一键部署
+很多 Node.js 的平台都是支持 docker 的，所以可以直接部署原版。但是既然很多人要，我就写一个。我目前仅仅维护 render 平台的文档。理论上其他平台都一样。
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+### render.com
 
-> 貌似在这个 repo 下 点击 一键部署貌似 heroku 提示违反某些原则，但是action 正常工作！！建议 fork 时候，项目名字，尽量不要带有 v2ray 关键字。
+[render](./doc/render.md)
 
-> 如果被heroku 提示错误，请用 github action 来部署。
+## 客户端 v2rayN 配置
 
-> 部署成功后，可以先用浏览器访问 ***.herokuapp.com， 查看页面是否能正常访问。会显示一个随机的维基百科页面。
+> ⚠️ 由于 edge 平台限制，无法转发 UDP 包。请在配置时候，把 DNS 的策略改成 "Asis", 否则会影响速度。
+> 请不要开启 ipv6 优先。
 
-## Github Actions 管理
+> [ DNS 科普文章](https://tachyondevel.medium.com/%E6%BC%AB%E8%B0%88%E5%90%84%E7%A7%8D%E9%BB%91%E7%A7%91%E6%8A%80%E5%BC%8F-dns-%E6%8A%80%E6%9C%AF%E5%9C%A8%E4%BB%A3%E7%90%86%E7%8E%AF%E5%A2%83%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8-62c50e58cbd0)
 
-请 Fork 本项目到自己的账户下。 Actions 需要以下 Secrets 才能正常工作，这些 Secrets 会被 workflow 中的 [akhileshns/heroku-deploy](https://github.com/AkhileshNS/heroku-deploy) 使用。
+### Windows 版本
 
-具体实现细节，请查看 [workflow 配置文件](./.github/workflows/main.yml). 如何配置， 请查看，[Github Secrets](#github-secrets)
+https://github.com/2dust/v2rayN
+别人的配置教程参考，https://v2raytech.com/v2rayn-config-tutorial/.
 
-| Name              | Description                                |
-| ----------------- | ------------------------------------------ |
-| APP_NAME          | 就是你 heroku 项目的名字. 如果你是第一次创建APP，**请确保名字是唯一的**|
-| EMAIL             | heroku 账户的 email                      |
-| HEROKU_API_KEY    | heroku API key，在 account 设置下可以找到 |
-| HEROKU_V2RAY_UUID | V2rayUUID                                |
-| HEROKU_TUNNEL_TOKEN | **可选** cloudflare tunnel 的 token    |
+具体配置，请参考部署服务的主页。
 
-> 这样Token一定必须是大写。。请在 heroku 网站创建app，来确保项目的名字的唯一性。
+### 安卓
 
-HEROKU_TUNNEL_TOKEN 是可选项，可以忽略. 详细说明，请查看章节 《建立-cloudflare-tunnel-（可选）》
+[v2rayNG](https://github.com/2dust/v2rayNG)
 
-> 请务必生成新的 UUID。使用已有的 UUID 会使自己 V2ray 暴露在危险之下。
+[SagerNet](https://github.com/SagerNet/SagerNet)
 
+如果遇到安卓无法使用, 请参考如下配置，多尝试下 DNS 设置。
 
-PowerShell:
+v2rayNG 设置。
+![andriod-v2ray](./doc/andriod_v2rayn.jpg)
 
-```powershell
-PS C:\Users\> New-Guid
-```
+### IOS
 
-Shell:
+> 需要美国区账户
 
-```bash
-xxx@xxx:/mnt/c/Users/$ uuidgen
-```
+[shadowrocket](https://apps.apple.com/us/app/shadowrocket/id932747118)
 
-### Github Secrets
+## 建立 cloudflare worker 反代 （可选）
 
-路径
-
-```text
-项目Setting-->Secrets
-```
-
-![Secrets](./readme-data/GithubSecrets.gif)
-
-### Heroku API key
-
-路径
-
-```text
-heroku Account settings-->API key
-```
-
-![Secrets](./readme-data/herokuapikey.gif)
-
-### Github Actions 界面
-
-```text
-Actions
-```
-
-![Actions](./readme-data/githubactions.gif)
-
-### 重新部署
-
-点击 `Run workflow`, 输入 deploy。 然后就会重新 deploy。
-
-这里可以**选择区域**，但是请确保app没有被创建过。如果要切换区域，请先使用 destroy 删除应用。
-
-![deploy](./readme-data/deploy.png)
-
-### 停止
-
-点击 `Run workflow`, 输入 stop。 然后就会 stop，不在计入小时数。
-![stop](./readme-data/stop.jpg)
-
-### 启动
-
-点击 `Run workflow`, 输入 start。 然后就会启动。
-
-![start](./readme-data/start.jpg)
-
-### 删除
-
-点击 `Run workflow`, 输入 destroy  然后就会删除。
-
-![delete](./readme-data/delete-app.png)
-
-
-## 建立 cloudflare worker （可选）
-
-如果遇到创建的app在正常网络下不能访问，请尝试这个。
-
-可以参考 开头的视频。代码如下。
-
-```javascript
-const targetHost = "xxx.herokuapp.com"; //你的heroku的hostname
-addEventListener("fetch", (event) => {
+```js
+const targetHost = 'xxx.xxxx.dev'; //你的 edge function 的hostname
+addEventListener('fetch', (event) => {
   let url = new URL(event.request.url);
   url.hostname = targetHost;
   let request = new Request(url, event.request);
   event.respondWith(fetch(request));
 });
-
-// herokuapp 如果长时间不访问就会休眠。增加cron事件监听器以支持定时job访问herokuapp url。
-addEventListener('scheduled', event => {
-  event.waitUntil(
-    handleSchedule(event)
-  )
-})
-
-async function handleSchedule(event) {
-  let url = new URL("https://" + targetHost);
-  url.hostname = targetHost;
-  let request = new Request(url);
-  const resp = await fetch(request);
-  //console.log(await resp.text());
-}
-```
-然后添加Worker的触发器以定时访问herokuapp url：
-![image](https://user-images.githubusercontent.com/78028446/174426881-cc16c91a-eab1-4900-ad7c-957ede42a67c.png)
-
-
-如果 worker 不好用，请用自己域名代理 worker
-https://owo.misaka.rest/cf-workers-ban-solution/
-
-为 worker 选择速度更快的 IP。
-https://github.com/badafans/better-cloudflare-ip
-
-## 建立 cloudflare tunnel （可选）
-
-项目集成 cloudflare tunnel， 在配置 Secrets `HEROKU_TUNNEL_TOKEN` 之后生效。具体怎么配置，请查看 [cloudflare tunnel](./cloudflared-tunnel.md)。
-
-## 使用 Environments 实现 多账户/多app Secrets 管理
-
-文档介绍： https://docs.github.com/en/actions/deployment/using-environments-for-deployment
-
-### 建立 Environments, 并添加 Secrets
-
-1. 创建 Environments
-![Environments](./readme-data/Environments.png)
-2. 添加 Secrets
-![EnvironmentsSercet](./readme-data/EnvironmentsSercet.png)
-
-### 输入环境名字
-**一定要确保环境名字是对的，要不然就会用主的Secrets。**
-![EnvironmentsDeploy](./readme-data/EnvironmentsDeploy.png)
-
-## VLESS websocket 客户端配置
-
-### JSON
-
-```json
-"outbounds": [
-        {
-            "protocol": "vless",
-            "settings": {
-                "vnext": [
-                    {
-                        "address": "***.herokuapp.com", // heroku app URL 或者 cloudflare worker url/ip
-                        "port": 443,
-                        "users": [
-                            {
-                                "id": "", // 填写你的 UUID
-                                "encryption": "none"
-                            }
-                        ]
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "ws",
-                "security": "tls",
-                "tlsSettings": {
-                    "serverName": "***.herokuapp.com" // heroku app host 或者 cloudflare worker host
-                }
-              }
-          }
-    ]
 ```
 
-### v2rayN
+优选 IP https://github.com/XIU2/CloudflareSpeedTest
 
+# FAQ
 
-换成 [V2rayN](https://github.com/2dust/v2rayN)
+## 那些平台可以使用？
 
-别人的配置教程参考，https://v2raytech.com/v2rayn-config-tutorial/.
+判断一个平台是否可以支持的，有 2 个必要条件，
 
-![v2rayN](/readme-data/V2rayN.jpg)
+1. 是否支持 websocket？
+   - 或者支持，HTTP request stream 也是可以的。https://developer.chrome.com/articles/fetch-streaming-requests/
+2. 可以创建 raw tcp socket？
 
-cloudflare worker ip 配置
+> Cloudflare Worker 虽然支持 websocket，但是 Worker 的 runtime 没有支持 创建 raw tcp socket 的 API。
 
-![v2rayN1](/readme-data/V2rayN1.jpg)
+## 不支持 UDP
+
+由于 edge 平台限制，无法转发 UDP 包。所以 DNS 策略请设置成 `Asis`.
+
+## 不支持 VMESS
+
+VMESS 协议过于复杂，并且所有 edge 平台都支持 HTTPS， 所以无需 VMESS.
+
+# 反馈与交流
+
+如果有问题，请使用 https://t.me/edgetunnel 进行交流。
